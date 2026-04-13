@@ -1,5 +1,9 @@
+# Claude settings
+.claude/
+
 # Data files (too large for GitHub)
 home-credit-default-risk/*.csv
+home-credit-default-risk/InfiniteLearning/*.csv
 
 # Python
 __pycache__/
