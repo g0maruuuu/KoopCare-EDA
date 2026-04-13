@@ -6,11 +6,21 @@ Proyek ini menyiapkan data untuk model Machine Learning credit scoring pada apli
 
 ## Dataset
 
-Download dataset di Google Drive berikut, lalu letakkan di folder `home-credit-default-risk/`:
+File CSV tidak di-push ke repository karena ukurannya terlalu besar. Download manual melalui Google Drive lalu letakkan sesuai folder path di bawah.
 
-**Link:** https://drive.google.com/drive/folders/17P3W0ooRG2YR3oVnYo4wTlz2gTDhV4Jf?usp=sharing
+| File | Keterangan | Link |
+|---|---|---|
+| `application_train.csv` | Dataset mentah sumber | [Download](https://drive.google.com/drive/folders/17P3W0ooRG2YR3oVnYo4wTlz2gTDhV4Jf?usp=sharing) |
+| `train_ready.csv` | Data final siap training ML | [Download](https://drive.google.com/drive/folders/1NJWqu8OQAJ6L4b0x-f4iFG4fq44NlpsH?usp=sharing) |
 
-**Folder path:** `C:\ArunikaCakrawala\home-credit-default-risk\`
+**Folder path:** Letakkan file sesuai struktur di bawah:
+
+```
+home-credit-default-risk/
+├── application_train.csv
+└── InfiniteLearning/
+    └── train_ready.csv
+```
 
 ---
 
