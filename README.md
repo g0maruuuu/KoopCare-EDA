@@ -1,26 +1,20 @@
-# Credit Scoring BMT — Data Preparation
+# Credit Scoring — Home Credit Default Risk
+## Infinite Learning · Tugas Akhir Machine Learning
 
-Proyek ini menyiapkan data untuk model Machine Learning credit scoring pada aplikasi digital BMT (Baitul Maal wa Tamwil). Model akan memprediksi kelayakan pemohon kredit: **LAYAK** atau **TIDAK LAYAK**.
+Proyek ini membangun model Machine Learning credit scoring end-to-end dari dataset Home Credit Default Risk.  
+Model memprediksi kelayakan pemohon kredit: **LAYAK (0)** atau **TIDAK LAYAK (1)**.
 
 ---
 
-## Dataset
+## Hasil Model Terbaik
 
-File CSV tidak di-push ke repository karena ukurannya terlalu besar. Download manual melalui Google Drive lalu letakkan sesuai folder path di bawah.
-
-| File | Keterangan | Link |
+| Metrik | Nilai | Standar Bank |
 |---|---|---|
-| `application_train.csv` | Dataset mentah sumber | [Download](https://drive.google.com/drive/folders/17P3W0ooRG2YR3oVnYo4wTlz2gTDhV4Jf?usp=sharing) |
-| `train_ready.csv` | Data final siap training ML | [Download](https://drive.google.com/drive/folders/1xKCx-Abzta_CsMKrcMLrw8yl0Dqo7PlE?usp=sharing) |
-
-**Folder path:** Letakkan file sesuai struktur di bawah:
-
-```
-home-credit-default-risk/
-├── application_train.csv
-└── InfiniteLearning/
-    └── train_ready.csv
-```
+| AUC-ROC | **0.7641** | ≥ 0.75 ⚠️ borderline |
+| Gini Coefficient | **0.5281** | ≥ 0.50 ✅ |
+| F1 Score | **0.3159** | — |
+| Threshold Optimal | **0.680** | via PR curve |
+| Model | **LightGBM** | — |
 
 ---
 
@@ -28,73 +22,135 @@ home-credit-default-risk/
 
 ```
 .
-├── application_train_processing.ipynb       # Notebook utama — seluruh proses data
+├── abel.ipynb                          # Notebook utama — 6 model, sklearn Pipeline
+├── credit_scoring_model_app.ipynb      # Notebook eksplorasi awal
+├── best_model_abel.pkl                 # Model terbaik tersimpan (LightGBM)
+├── hasil_prediksi_abel.csv             # Hasil prediksi 48.744 nasabah test
+├── rangkuman_perbandingan_model.md     # Perbandingan lengkap semua model
 ├── home-credit-default-risk/
-│   ├── application_train.csv                # Dataset mentah (sumber, download dari Drive)
-│   └── InfiniteLearning/
-│       ├── train.csv                        # Data setelah filter kolom
-│       └── train_ready.csv                  # Data final siap training ML
+│   ├── application_train.csv           # Data training (307.511 baris)
+│   └── application_test.csv            # Data testing (48.744 baris)
 └── README.md
 ```
 
 ---
 
-## Alur Proses
+## Dataset
 
-### [1] Data Collection
-- Sumber: dataset Home Credit Default Risk (real-world)
-- 307.511 baris, 122 kolom awal
-- Label: `TARGET` — 0 = tidak gagal bayar, 1 = gagal bayar
+File CSV tidak di-push ke repository karena ukurannya terlalu besar.  
+Download manual melalui link berikut lalu letakkan sesuai struktur folder di atas.
 
-### [2] Data Preprocessing
-- Filter ke 23 kolom yang relevan sesuai spesifikasi produk
-- Mengisi nilai kosong dengan median (numerik) dan `Unknown` (teks)
-- Menangani anomali `DAYS_EMPLOYED` (nilai 365243 → diganti 0 + flag baru)
-- Menghapus 16 baris duplikat
-- Encoding: Label Encoding (binary) + One-Hot Encoding (multi-kelas)
-
-### [3] EDA — Exploratory Data Analysis
-- Analisis univariat: distribusi pendapatan, kredit, cicilan, usia
-- Analisis outlier dengan metode IQR
-- Setiap analisis dilengkapi kesimpulan dalam bahasa awam
-
-### [4] Visualisasi Data
-- Distribusi jenis pendapatan, pekerjaan, kepemilikan aset, status pernikahan
-- Grafik histogram, bar chart, boxplot dengan tabel statistik
-
-### [5] Finalisasi Data
-- Feature engineering: `FLAG_TIDAK_BEKERJA`
-- Cek class imbalance (rasio 11.4:1)
-- Output: `train_ready.csv`
+| File | Ukuran | Link |
+|---|---|---|
+| `application_train.csv` | ~166 MB | [Download](https://drive.google.com/drive/folders/17P3W0ooRG2YR3oVnYo4wTlz2gTDhV4Jf?usp=sharing) |
+| `application_test.csv` | ~26 MB | [Download](https://drive.google.com/drive/folders/17P3W0ooRG2YR3oVnYo4wTlz2gTDhV4Jf?usp=sharing) |
 
 ---
 
-## Data Final
+## Notebook Utama — abel.ipynb
 
-| Keterangan | Nilai |
+### Fitur yang Digunakan (26 fitur)
+
+| Kategori | Fitur |
 |---|---|
-| File | `InfiniteLearning/train_ready.csv` |
-| Jumlah baris | 307.495 |
-| Jumlah fitur | 115 + 1 TARGET |
-| Missing value | 0 |
-| Duplikat | 0 |
-| Kolom teks | 0 (semua sudah numerik) |
+| Demografi | CODE_GENDER, NAME_INCOME_TYPE, NAME_EDUCATION_TYPE, NAME_FAMILY_STATUS, OCCUPATION_TYPE, FLAG_OWN_CAR, FLAG_OWN_REALTY |
+| Keuangan | CNT_CHILDREN, CNT_FAM_MEMBERS, AMT_INCOME_TOTAL, AMT_CREDIT, AMT_ANNUITY, AMT_GOODS_PRICE |
+| Waktu & Kerja | DAYS_EMPLOYED, DAYS_LAST_PHONE_CHANGE, AGE_YEARS, DAYS_EMPLOYED_ANOM |
+| Skor Eksternal | EXT_SOURCE_1, EXT_SOURCE_2, EXT_SOURCE_3 |
+| Engineering | EXT_SOURCE_MEAN, EXT_SOURCE_MIN, EXT_SOURCE_PROD, DEBT_TO_INCOME, PAYMENT_RATE |
 
----
+### Model yang Dibandingkan
 
-## Cara Pakai
+| Rank | Model | AUC | Gini | F1 | Threshold |
+|---|---|---|---|---|---|
+| 1 | **LightGBM** ⭐ | 0.7641 | 0.5281 | 0.3159 | 0.680 |
+| 2 | XGBoost | 0.7640 | 0.5281 | 0.3169 | 0.687 |
+| 3 | CatBoost | 0.7628 | 0.5257 | 0.3148 | 0.691 |
+| 4 | Gradient Boosting | 0.7553 | 0.5106 | 0.3099 | 0.650 |
+| 5 | Random Forest | 0.7478 | 0.4956 | 0.2989 | 0.620 |
+| 6 | Logistic Regression | 0.7453 | 0.4907 | 0.2951 | 0.651 |
 
-```python
-import pandas as pd
+### Pipeline Preprocessing
 
-df = pd.read_csv('home-credit-default-risk/InfiniteLearning/train_ready.csv')
-
-X = df.drop(columns=['TARGET'])
-y = df['TARGET']
-
-# Langsung masuk model
-model.fit(X, y)
+```
+ColumnTransformer
+├── Numerik  → SimpleImputer(median) → StandardScaler
+└── Kategorikal → SimpleImputer(most_frequent) → OneHotEncoder
 ```
 
-> **Catatan:** Data memiliki ketidakseimbangan kelas (91% vs 8%).
-> Gunakan `class_weight='balanced'` atau `scale_pos_weight=11` saat training.
+### Penanganan Class Imbalance (rasio 11.4:1)
+
+| Model | Metode |
+|---|---|
+| Logistic Regression | `class_weight='balanced'` |
+| Random Forest | `class_weight='balanced'` |
+| Gradient Boosting | `sample_weight` (compute_sample_weight) |
+| XGBoost | `scale_pos_weight=ratio` |
+| LightGBM | `class_weight='balanced'` |
+| CatBoost | `class_weights=[1, ratio]` |
+
+---
+
+## Hasil Prediksi Data Test
+
+Prediksi terhadap **48.744 nasabah** dari `application_test.csv`:
+
+| Status | Jumlah | Persentase |
+|---|---|---|
+| ✅ DITERIMA (LAYAK) | 42,414 | 87.0% |
+| ❌ DITOLAK (TIDAK LAYAK) | 6,330 | 13.0% |
+
+Hasil lengkap tersimpan di `hasil_prediksi_abel.csv`.
+
+---
+
+## Cara Pakai Model
+
+```python
+import joblib
+import pandas as pd
+import numpy as np
+
+# Load model
+obj = joblib.load('best_model_abel.pkl')
+model      = obj['model']
+threshold  = obj['threshold']
+feat_cols  = obj['feature_cols']
+
+# Feature engineering (wajib sama persis saat training)
+def feature_engineering(df):
+    df = df.copy()
+    df['DAYS_EMPLOYED_ANOM'] = (df['DAYS_EMPLOYED'] == 365243).astype(int)
+    df['DAYS_EMPLOYED']      = df['DAYS_EMPLOYED'].replace(365243, np.nan)
+    df['AGE_YEARS']          = abs(df['DAYS_BIRTH']) / 365
+    df['DEBT_TO_INCOME']     = df['AMT_CREDIT']  / (df['AMT_INCOME_TOTAL'] + 1)
+    df['PAYMENT_RATE']       = df['AMT_ANNUITY'] / (df['AMT_CREDIT'] + 1)
+    ext = ['EXT_SOURCE_1','EXT_SOURCE_2','EXT_SOURCE_3']
+    df['EXT_SOURCE_MEAN'] = df[ext].mean(axis=1)
+    df['EXT_SOURCE_MIN']  = df[ext].min(axis=1)
+    df['EXT_SOURCE_PROD'] = df[ext].prod(axis=1)
+    return df
+
+# Prediksi
+df  = feature_engineering(df_input)
+X   = df[feat_cols]
+prob = model.predict_proba(X)[:, 1]
+pred = (prob >= threshold).astype(int)  # 0=LAYAK, 1=TIDAK LAYAK
+```
+
+---
+
+## Instalasi
+
+```bash
+pip install xgboost lightgbm catboost scikit-learn pandas numpy matplotlib seaborn joblib
+```
+
+---
+
+## Catatan
+
+- Data memiliki ketidakseimbangan kelas: **91.9% LAYAK vs 8.1% TIDAK LAYAK**
+- Threshold optimal dicari via **Precision-Recall curve** (bukan default 0.5)
+- Gini Coefficient = `2 × AUC − 1`, standar minimum perbankan adalah **≥ 0.50**
+- Detail perbandingan model tersedia di `rangkuman_perbandingan_model.md`
